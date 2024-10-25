@@ -1,28 +1,32 @@
 import { router } from 'expo-router';
 import React from 'react';
-import { View, Text, StyleSheet, Button, Alert } from 'react-native';
-import Nav from '@/app/Nav';
+import { View, Text, StyleSheet, Button, Alert, Dimensions } from 'react-native';
 import { ScrollView } from 'react-native';
+import { Calendar } from 'react-native-calendars';
 
 const TasksTestingPage = () => {
+  const screenWidth = Dimensions.get('window').width; 
   const handleTest = () => {
     // This is where your test logic can go
     Alert.alert('Test Button Clicked', 'Testing logic goes here.');
   };
 
   return (
-    
-    <View style={{flex:0.74}}>
-   
-    <Nav></Nav>
     <View style={styles.container}>
-      <Text style={styles.title}>Habits Testing Page</Text>
-      <Text style={styles.subtitle}>This is a placeholder page for testing habits.</Text>
-
+      <Text style={styles.title}>Habits Page</Text>
+      <Calendar  style={{
+          borderWidth: 1,
+          borderColor: 'gray',
+          width: screenWidth * 0.9,
+        }} onDayPress={(day: any) => {
+ 
+        }}>
+        
+      </Calendar>
       <Button title="Run Test" onPress={handleTest} />
       {/* <Button title="sign out" onPress={()=>router.navigate('/signout')} /> */}
     </View>
-    </View>
+
   );
 };
 

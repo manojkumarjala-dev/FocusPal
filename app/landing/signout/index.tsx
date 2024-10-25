@@ -12,7 +12,7 @@ const SignOutScreen = () => {
     signOut(auth)
       .then(() => {
         console.log('User signed out successfully');
-        navigate.navigate('index');
+        router.navigate('/');
       })
       .catch((error) => {
         console.error('Error signing out:', error.message);

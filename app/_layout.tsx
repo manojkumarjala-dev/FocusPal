@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider } from '@/AuthProvider';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -29,15 +30,48 @@ export default function RootLayout() {
   }
 
   return (
+    <GestureHandlerRootView>
+    <AuthProvider>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      
       <Stack>
-        <Stack.Screen name="index" options={{headerShown:false}}/>
-        <Stack.Screen name="+not-found" />
-        <Stack.Screen name="login/index" options={{title: '',headerShown:true,headerBackTitleVisible:false}}/>
-        <Stack.Screen name="signup/index" options={{title: '',headerShown:true,headerBackTitleVisible:false}}/>
-        <Stack.Screen name="welcome" options={{title: '',headerShown:false}}/>
+        <Stack.Screen 
+          name="index" 
+          options={{
+            headerShown: true, 
+            title: '',          
+          }} 
+        />
+        <Stack.Screen 
+          name="(auth)" 
+          options={{
+            headerShown: true, 
+            title: '',          
+          }} 
+        />
+        <Stack.Screen 
+          name="landing" 
+          options={{
+            headerShown: false,          
+          }} 
+        />
+        <Stack.Screen 
+          name="pages/timer" 
+          options={{
+            title:'',
+            headerBackTitle:''
+          }} 
+        />
+        <Stack.Screen 
+          name="pages/addTask" 
+          options={{
+            title:'',
+            headerBackTitle:'Tasks'
+          }} 
+        />
       </Stack>
     </ThemeProvider>
+    </AuthProvider>
+    
+    </GestureHandlerRootView>
   );
 }

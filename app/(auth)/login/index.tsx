@@ -29,7 +29,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         .then((userCredential) => {
           const user = userCredential.user;
           console.log('User logged in successfully:');
-          router.navigate('/welcome')
+          router.navigate('/landing')
 
     })
     .catch((error) => {
@@ -39,7 +39,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     return;
   };
   if(auth.currentUser){
-    return <Redirect href="/welcome"/>
+    return <Redirect href="/landing"/>
   }
 
   return (

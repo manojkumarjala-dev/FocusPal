@@ -1,38 +1,40 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Image, StyleSheet, ScrollView, Text, View, TouchableOpacity } from 'react-native';
 import { Link, router } from 'expo-router';
 import { Router } from 'expo-router';
+import { AuthContext } from '@/AuthProvider';
 
 export default function HomeScreen() {
+  const { user } = useContext(AuthContext);
   
   return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.appName}>FocusPal</Text>
+          <Text style={styles.tagline}>Master your time, build great habits.</Text>
+        </View>
+
+        <View style={styles.illustrationContainer}>
+          <Image source={require('@/assets/images/focus.png')} style={styles.illustration} />
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.navigate('/login')} // Navigate to Login when pressed
+          >
+            <Text style={styles.buttonText}>Login</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.navigate('/signup')} // Navigate to SignUp when pressed
+          >
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.appName}>FocusPal</Text>
-        <Text style={styles.tagline}>Master your time, build great habits.</Text>
-      </View>
-
-      <View style={styles.illustrationContainer}>
-        <Image source={require('../assets/images/focus.png')} style={styles.illustration} />
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.navigate('/login')} // Navigate to Login when pressed
-        >
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.navigate('/signup')} // Navigate to SignUp when pressed
-        >
-          <Text style={styles.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
   );
 }
 
