@@ -1,39 +1,78 @@
-import React, { useState, useContext } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { AuthContext } from '@/AuthProvider'; // Import AuthContext for user information
+import { Picker } from '@react-native-picker/picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthContext } from '@/AuthProvider';
 import { db } from '@/firebaseConfig';
 import { router } from 'expo-router';
 
-export default function AddTaskScreen({ navigation }) {
+export default function AddTaskScreen() {
   const [taskText, setTaskText] = useState('');
-  const [deadline, setDeadline] = useState(new Date()); // Deadline state
-  const [showDatePicker, setShowDatePicker] = useState(false); // Toggle for date picker
-  const [priority, setPriority] = useState('Low'); // Priority state
-  const { user } = useContext(AuthContext); // Access the current user from the AuthContext
+  const [deadline, setDeadline] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [priority, setPriority] = useState('Low');
+  const [category, setCategory] = useState('Work');
+  const [customCategory, setCustomCategory] = useState('');
+  const [categories, setCategories] = useState(['Work', 'Personal', 'Health']);
+  const { user } = useContext(AuthContext);
 
-  // Function to add a task and sync with Firestore
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  // Load categories from AsyncStorage
+  const loadCategories = async () => {
+    try {
+      const storedCategories = await AsyncStorage.getItem('categories');
+      if (storedCategories) {
+        setCategories(JSON.parse(storedCategories));
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
+
+  // Save categories to AsyncStorage
+  const saveCategories = async (newCategories: React.SetStateAction<string[]>) => {
+    try {
+      await AsyncStorage.setItem('categories', JSON.stringify(newCategories));
+      setCategories(newCategories);
+    } catch (error) {
+      console.error('Error saving categories:', error);
+    }
+  };
+
+  // Function to add a task
   const addTask = async () => {
     if (taskText.trim().length > 0 && user) {
-      // Get the year, month, and date in local time
       const taskDeadline = `${deadline.getFullYear()}-${String(deadline.getMonth() + 1).padStart(2, '0')}-${String(deadline.getDate()).padStart(2, '0')}`;
-  
+      const finalCategory = category === 'Custom' ? customCategory : category;
+
       const newTask = {
         text: taskText,
         completed: false,
-        priority, // Add priority to the task
-        deadline: taskDeadline, // Store only the date part (YYYY-MM-DD)
+        priority,
+        category: finalCategory,
+        deadline: taskDeadline,
         createdAt: new Date().toISOString(),
         userId: user.uid,
       };
-  
-      console.log(newTask.deadline);
-  
+
       try {
         await db.collection('tasks').add(newTask);
-        setTaskText(''); // Clear the input after adding a task
-        setDeadline(new Date()); // Reset deadline after task is added
-        router.back(); // Navigate back after adding
+
+        // Save custom category if it's new
+        if (category === 'Custom' && customCategory && !categories.includes(customCategory)) {
+          const updatedCategories = [...categories, customCategory];
+          await saveCategories(updatedCategories);
+        }
+
+        setTaskText('');
+        setDeadline(new Date());
+        setCategory('Work');
+        setCustomCategory('');
+        router.back();
       } catch (error) {
         console.error('Error adding task to Firestore: ', error);
       }
@@ -44,7 +83,6 @@ export default function AddTaskScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>Add a New Task</Text>
 
-      {/* Input field and add task button */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -81,11 +119,32 @@ export default function AddTaskScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Deadline Picker */}
-      <TouchableOpacity
-        style={styles.deadlineButton}
-        onPress={() => setShowDatePicker(true)}
-      >
+      {/* Category Selector */}
+      <View style={styles.categoryContainer}>
+        <Text style={styles.categoryLabel}>Category:</Text>
+        <Picker
+          selectedValue={category}
+          onValueChange={(itemValue) => setCategory(itemValue)}
+          style={styles.categoryPicker}
+        >
+          {categories.map((cat) => (
+            <Picker.Item key={cat} label={cat} value={cat} />
+          ))}
+          <Picker.Item label="Custom" value="Custom" />
+        </Picker>
+      </View>
+
+      {/* Custom Category Input - Show only if 'Custom' is selected */}
+      {category === 'Custom' && (
+        <TextInput
+          style={styles.customInput}
+          placeholder="Enter custom category"
+          value={customCategory}
+          onChangeText={setCustomCategory}
+        />
+      )}
+
+      <TouchableOpacity style={styles.deadlineButton} onPress={() => setShowDatePicker(true)}>
         <Text style={styles.deadlineButtonText}>
           Select Deadline: {`${deadline.getDate()}/${deadline.getMonth() + 1}/${deadline.getFullYear()}`}
         </Text>
@@ -171,11 +230,37 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   selectedPriority: {
-    backgroundColor: '#00796b', // Highlight selected priority
+    backgroundColor: '#00796b',
   },
   priorityButtonText: {
     color: '#333',
     fontWeight: 'bold',
+  },
+  categoryContainer: {
+    alignItems:'center',
+
+    marginBottom: 20,
+    flexDirection:'row'
+  },
+  categoryLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#00796b',
+    marginBottom: 10,
+  },
+  categoryPicker: {
+    height: 'auto',
+    width: '80%',
+  },
+  customInput: {
+    height: 45,
+    borderColor: '#00796b',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginBottom: 26,
+    marginTop:'-20%',
+    backgroundColor: '#fff',
   },
   deadlineButton: {
     marginBottom: 20,

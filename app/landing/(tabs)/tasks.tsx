@@ -1,57 +1,95 @@
-import React, { useEffect, useState, useContext, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'react-native';
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, ScrollView, RefreshControl, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { AuthContext } from '@/AuthProvider';
 import { db } from '@/firebaseConfig';
-import { Calendar } from 'react-native-calendars';
-import { router, useFocusEffect } from 'expo-router';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Import FontAwesome icons
+import TaskItem from '@/components/TaskItem';
+import TaskModal from '@/components/TaskModal';
+import SortingControls from '@/components/SortingControls';
+import TaskCalendar from '@/components/TaskCalendar';
+import { useFocusEffect } from '@react-navigation/native';
+import { router } from 'expo-router';
+import { Task, DateObject, TaskCategoryMap, Priority } from '@/scripts/types';
 
-export default function ViewTasksScreen({ navigation }) {
-  const [tasks, setTasks] = useState([]);
-  const [filteredTasks, setFilteredTasks] = useState([]);
+
+export default function ViewTasksScreen() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [markedDates, setMarkedDates] = useState({});
-  const [selectedTask, setSelectedTask] = useState(null); // State to store the selected task
-  const [isVisible, setIsVisible] = useState(false); // Modal visibility state
+  const [selectedTask, setSelectedTask] = useState<Task|null>();
+  const [isVisible, setIsVisible] = useState(false);
+  const [sortOption, setSortOption] = useState('priority');
   const { user } = useContext(AuthContext);
-  
-  // Function to check if deadline is passed
-  const isDeadlinePassed = (deadline) => {
-    const taskDeadline = new Date(deadline);
-    const localTaskDeadline = new Date(taskDeadline.getTime() + taskDeadline.getTimezoneOffset() * 60000); // Convert UTC to local time
-    
-    const today = new Date().setHours(0, 0, 0, 0); // Midnight of the current day in local time
-    
-    return localTaskDeadline.setHours(23, 59, 59, 999) < today; // Check if deadline has passed
-  };
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true); // Add loading state
 
-  // Function to fetch tasks
+  
+
+  // Fetch tasks from Firestore
   const fetchTasks = async () => {
     if (!user) return;
 
+    setLoading(true); // Start loading
     try {
-      const taskList = [];
+      const taskList : Task[] = [];
       const snapshot = await db
         .collection('tasks')
         .where('userId', '==', user.uid)
         .get();
 
-      snapshot.forEach((doc) => {
-        taskList.push({ id: doc.id, ...doc.data() });
-      });
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          
+          // Ensure `data` includes all properties of `Task`
+          if (
+            data.category &&
+            typeof data.completed === 'boolean' &&
+            data.createdAt &&
+            data.deadline &&
+            data.priority &&
+            data.text &&
+            data.userId 
+          ) {
+            taskList.push({
+              id: doc.id,
+              category: data.category,
+              completed: data.completed,
+              createdAt: data.createdAt,
+              deadline: data.deadline,
+              priority: data.priority,
+              text: data.text,
+              userId: data.userId,
+            });
+          } else {
+            console.warn(`Missing fields in document with ID: ${doc.id}`, data);
+          }
+        });
 
       setTasks(taskList);
       markTaskDates(taskList);
-
-      const today = new Date().toISOString().split('T')[0];
-      filterTasksByDate(today);
     } catch (error) {
       console.error('Error fetching tasks: ', error);
     }
+    setLoading(false); // Stop loading after fetch
   };
 
-  // Mark task dates in calendar
-  const markTaskDates = (tasksList) => {
-    const marks = {};
+  // Trigger filterTasksByDate when `tasks` state updates
+  useEffect(() => {
+    if (tasks.length > 0) {
+      filterTasksByDate(getLocalDateString());
+      console.log(filteredTasks)
+    }
+  }, [tasks]);
+
+  const getLocalDateString = () => {
+    const today = new Date();
+    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+    return today.toISOString().split('T')[0];
+  };
+
+  // Mark task dates in the calendar
+  const markTaskDates = (tasksList: Task[]) => {
+    const marks: Record<string, { marked: boolean; dotColor: string }> = {};
     tasksList.forEach(task => {
       const taskDate = new Date(task.deadline).toISOString().split('T')[0];
       marks[taskDate] = { marked: true, dotColor: 'blue' };
@@ -59,64 +97,43 @@ export default function ViewTasksScreen({ navigation }) {
     setMarkedDates(marks);
   };
 
+  // Function to filter and sort tasks by a specific date
+  const filterTasksByDate = (dateString: string) => {
+    const filtered = tasks.filter(task => {
+      const taskDate = new Date(task.deadline).toISOString().split('T')[0];
+      return taskDate === dateString;
+    });
+    setFilteredTasks(filtered);
+  };
+
   // Delete task from Firestore
-  const deleteTask = async (taskId) => {
+  const deleteTask = async (taskId: string) => {
     try {
       await db.collection('tasks').doc(taskId).delete();
-
-      // Update the local state after deletion
       const updatedTasks = tasks.filter(task => task.id !== taskId);
       setTasks(updatedTasks);
-
-      // Re-filter tasks after deletion
-      const today = new Date().toISOString().split('T')[0];
-      filterTasksByDate(today);
+      filterTasksByDate(new Date().toISOString().split('T')[0]); // Re-filter for today's tasks
     } catch (error) {
       console.error('Error deleting task: ', error);
     }
   };
 
-  useEffect(() => {
-    if (selectedTask) {
-      const taskDate = new Date(selectedTask.deadline).toISOString().split('T')[0];
-      filterTasksByDate(taskDate);
-    }
-  }, [tasks]);
-
-  // Fetch tasks when the screen is focused
+  // Fetch tasks and filter by today's date when the screen is focused
   useFocusEffect(
-    useCallback(() => {
-      const today = new Date().toISOString().split('T')[0];
-      fetchTasks(); // Fetch tasks
-      filterTasksByDate(today); // Automatically filter tasks for today when the screen is focused
-    }, [user])
+    React.useCallback(() => {
+      fetchTasks();
+    }, [])
   );
 
-  // Function to filter and sort tasks by a specific date
-  const filterTasksByDate = (dateString) => {
-    let filtered = tasks.filter(task => {
-      const taskDate = new Date(task.deadline).toISOString().split('T')[0];
-      return taskDate === dateString;
-    });
-
-    // Sort tasks by priority: High > Medium > Low
-    filtered = filtered.sort((a, b) => {
-      const priorityOrder = { High: 1, Medium: 2, Low: 3 };
-      return priorityOrder[a.priority] - priorityOrder[b.priority];
-    });
-
-    setFilteredTasks(filtered);
-  };
-
-  const handleDayPress = (day) => {
+  const handleDayPress = (day: DateObject) => {
     filterTasksByDate(day.dateString);
   };
 
-  const toggleTaskCompletion = async (task) => {
+  const toggleTaskCompletion = async (task : Task) => {
     const updatedCompleted = !task.completed;
     try {
       await db.collection('tasks').doc(task.id).update({
-        completed: updatedCompleted, 
+        completed: updatedCompleted,
       });
 
       const updatedTasks = tasks.map((t) =>
@@ -130,152 +147,120 @@ export default function ViewTasksScreen({ navigation }) {
     }
   };
 
-  const handleShowTask = (task) => {
+  const handleShowTask = (task: Task) => {
     setSelectedTask(task);
-    setIsVisible(true); 
+    setIsVisible(true);
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={isRefreshing} onRefresh={() => { fetchTasks(); setSortOption('priority'); }} />
+      }
+    >
       <Text style={styles.title}>Your Tasks</Text>
+      <TaskCalendar markedDates={markedDates} onDayPress={handleDayPress} />
+      <SortingControls sortOption={sortOption} setSortOption={setSortOption} />
 
-      <Calendar
-        style={{
-          borderWidth: 1,
-          borderColor: 'gray',
-          borderRadius: 10,
-          marginBottom: 20,
-        }}
-        markedDates={markedDates}
-        onDayPress={handleDayPress}
-      />
-
-      {filteredTasks.length > 0 ? (
-        filteredTasks.map((task) => (
-          <View key={task.id} style={styles.taskContainer}>
-            <View style={styles.taskRow}> 
-              <TouchableOpacity
-                style={[styles.taskTextContainer,{flex:0.95}]}
-                onPress={() => handleShowTask(task)}
-              >
-                <Text
-                  style={[
-                    styles.taskText,
-                    { textDecorationLine: task.completed ? 'line-through' : 'none' },
-                  ]}
-                >
-                  {task.text} - <Text style={styles.priorityText}>({task.priority})</Text>
-                </Text>
-                <Text style={styles.deadlineText}>{task.deadline.split('T')[0]}</Text>
-              </TouchableOpacity>
-      
-              {/* Delete Button */}
-              
+      {loading ? (
+        // Show loading indicator while fetching tasks
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#00796b" />
+          <Text style={styles.loadingText}>Loading tasks...</Text>
+        </View>
+      ) : filteredTasks.length > 0 ? (
+        sortOption === 'category' ? (
+          // Group tasks by category when sorting by category
+          Object.entries(
+            filteredTasks.reduce((acc: TaskCategoryMap, task) => {
+              acc[task.category] = [...(acc[task.category] || []), task];
+              return acc;
+            }, {})
+          ).map(([category, tasksInCategory]) => (
+            <View key={category}>
+              <Text style={styles.categoryHeader}>{category}</Text>
+              {tasksInCategory.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  handleShowTask={handleShowTask}
+                  deleteTask={deleteTask}
+                />
+              ))}
             </View>
-            <View style={{width:'10%'}}>
-
-            <TouchableOpacity onPress={() => deleteTask(task.id)} style={[styles.deleteButton,{flex:0.05, right:0 }]}>
-                <Icon name="trash" size={20} color="red" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))
+          ))
+        ) : (
+          // Sort tasks by priority when not grouped by category
+          filteredTasks
+            .sort((a, b) => {
+              const priorityOrder = { High: 1, Medium: 2, Low: 3 };
+              return priorityOrder[a.priority] - priorityOrder[b.priority];
+            })
+            .map((task) => (
+              <TaskItem
+                key={task.id}
+                task={task}
+                handleShowTask={handleShowTask}
+                deleteTask={deleteTask}
+              />
+            ))
+        )
       ) : (
-        <Text style={styles.noTasksText}>No tasks for the selected day.</Text>
+        // Show a happy message if there are no tasks
+        <View style={styles.noTasksContainer}>
+          <Text style={styles.noTasksText}>🎉 You're all caught up! No tasks for today.</Text>
+        </View>
+      )}
+
+      {selectedTask && (
+        <TaskModal
+          task={selectedTask}
+          isVisible={isVisible}
+          toggleTaskCompletion={toggleTaskCompletion}
+          onClose={() => {
+            setIsVisible(false);
+            setSelectedTask(null);
+          }}
+        />
       )}
 
       <TouchableOpacity
-        style={styles.navigateButton}
+        style={styles.addButton}
         onPress={() => router.navigate('/pages/addTask')}
       >
-        <Text style={styles.navigateButtonText}>Add New Task</Text>
+        <Text style={styles.addButtonText}>Add New Task</Text>
       </TouchableOpacity>
-
-      {selectedTask && (
-        <Modal visible={isVisible} transparent={true} animationType="slide">
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <TouchableOpacity style={styles.closeButton} onPress={() => setIsVisible(false)}>
-                <Icon name="times" size={24} color="red" />
-              </TouchableOpacity>
-
-              <Text style={styles.modalTitle}>{selectedTask.text}</Text>
-              <Text style={styles.modalDeadline}>Deadline: {selectedTask.deadline.split('T')[0]}</Text>
-              {isDeadlinePassed(selectedTask.deadline) ? (
-                <Text style={styles.passedDeadlineMessage}>Deadline has passed!</Text>
-              ) : null}
-              <Text style={[styles.priorityText, 
-                selectedTask.priority === 'High' ? styles.highPriority :
-                selectedTask.priority === 'Medium' ? styles.mediumPriority :
-                styles.lowPriority]}>
-                Priority: {selectedTask.priority}
-              </Text>
-
-              <Text>Status: {selectedTask.completed ? 'Completed' : 'Pending'}</Text>
-              
-              <TouchableOpacity
-                style={styles.completeButton}
-                onPress={() => toggleTaskCompletion(selectedTask)}
-              >
-                <Text style={styles.completeButtonText}>
-                  {selectedTask.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      )}
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: 300,
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    zIndex: 1, // Ensure the X button is always on top
-  },
-  closeButtonText: {
-    fontSize: 20,
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  modalDeadline: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  completeButton: {
+  addButton: {
     backgroundColor: '#00796b',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    margin: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
   },
-  completeButtonText: {
+  addButtonText: {
     color: '#fff',
+    fontSize: 18,
     fontWeight: 'bold',
+  },
+  categoryHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#00796b',
+    marginVertical: 10,
   },
   container: {
     flex: 1,
-    padding: 20,
+    marginBottom: '20%',
+    paddingBottom: '30%',
+    paddingHorizontal: 20,
     backgroundColor: '#f5f5f5',
   },
   title: {
@@ -285,76 +270,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#00796b',
   },
-  taskContainer: {
-    paddingVertical: 10,
-    flexDirection:'row',
-    paddingHorizontal: 10,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-
-    elevation: 2,
-  },
-  taskRow: {
-    width:'90%',
-    flexDirection: 'row',  // Ensure that the task text and delete button are in a single row
-    justifyContent: 'space-between', // Add space between the text and the delete button
-    alignItems: 'center', // Vertically center the items in the row
-  },
-  taskTextContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  taskText: {
-    fontSize: 18,
-    color: '#333',
+  loadingContainer: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
   },
-  deadlineText: {
-    fontSize: 14,
-    color: '#00796b',
-    marginTop: 5,
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+
+  },
+  noTasksContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
   },
   noTasksText: {
-    textAlign: 'center',
-    color: '#333',
-    marginTop: 10,
-  },
-  navigateButton: {
-    backgroundColor: '#00796b',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 25,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  navigateButtonText: {
-    color: '#fff',
     fontSize: 18,
+    color: '#00796b',
     fontWeight: 'bold',
-  },
-  priorityText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginVertical: 10,
-  },
-  highPriority: {
-    color: 'red', // Red color for High priority
-  },
-  mediumPriority: {
-    color: 'orange', // Yellow color for Medium priority
-  },
-  lowPriority: {
-    color: 'green', // Green color for Low priority
-  },
-  passedDeadlineMessage: {
-    fontSize: 14,
-    color: 'red',
-    marginBottom: 10,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    marginTop: 20,
   },
 });
