@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar } from 'react-native-calendars';
+import { Calendar, WeekCalendar } from 'react-native-calendars';
 
 export default function TaskCalendar({ markedDates, onDayPress }) {
   return (

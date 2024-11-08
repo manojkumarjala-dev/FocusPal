@@ -59,39 +59,40 @@ export default function PomodoroWelcomeScreen() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#121212', // Dark background color
   },
   welcomeText: {
-    fontSize: 24,
+    fontSize: 28, // Larger text for prominence
     fontWeight: 'bold',
-    color: '#00796b',
+    color: '#ffffff', // White text color
     marginBottom: 20,
   },
   sessionCount: {
     fontSize: 18,
+    color: '#a5a5a5', // Subtle grey for secondary information
     marginBottom: 40,
-    color: '#333',
   },
   startButton: {
-    backgroundColor: '#00796b',
+    backgroundColor: '#1DB954', // Bright green for action button
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   startButtonText: {
-    color: '#fff',
+    color: '#ffffff', // White text for contrast
     fontSize: 18,
     fontWeight: 'bold',
   },
   loadingText: {
     fontSize: 18,
-    color: '#666',
+    color: '#a5a5a5', // Subtle color for loading text
   },
 });

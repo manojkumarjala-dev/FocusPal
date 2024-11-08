@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/firebaseConfig'; // Adjust the import path as needed
+import { router } from 'expo-router';
 
 const AddHabitScreen = () => {
   const [habitName, setHabitName] = useState('');
@@ -13,15 +16,58 @@ const AddHabitScreen = () => {
     Sat: false,
     Sun: false,
   });
-  
+
   type Day = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+
   const handleDayToggle = (day: Day) => {
     setCustomDays((prev) => ({ ...prev, [day]: !prev[day] }));
   };
 
-  const handleAddHabit = () => {
+  const handleAddHabit = async () => {
     const selectedDays = (Object.keys(customDays) as Day[]).filter(day => customDays[day]);
-    console.log('Habit added:', habitName, frequency, selectedDays.length ? selectedDays : frequency);
+
+    if (!habitName.trim()) {
+      Alert.alert("Error", "Please enter a habit name.");
+      return;
+    }
+
+    const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+
+    const newHabit = {
+      name: habitName,
+      frequency,
+      customDays: frequency === 'Custom' ? selectedDays : null,
+      createdAt: new Date(),
+      startDate: currentDate, // Automatically set start date to today's date
+      dates: {
+        success: [],
+        failure: []
+      },
+      streaks: {
+        currentStreak: 0,
+        highestStreak: 0,
+      }
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, 'habits'), newHabit);
+      Alert.alert("Success", `Habit added`);
+      setHabitName('');
+      setFrequency('Daily');
+      setCustomDays({
+        Mon: false,
+        Tue: false,
+        Wed: false,
+        Thu: false,
+        Fri: false,
+        Sat: false,
+        Sun: false,
+      });
+      router.back();
+    } catch (error) {
+      console.error("Error adding habit: ", error);
+      Alert.alert("Error", "Failed to add habit. Please try again.");
+    }
   };
 
   return (
@@ -111,11 +157,11 @@ const styles = StyleSheet.create({
   },
   frequencyOption: {
     padding: 10,
-    paddingHorizontal:'10%',
+    paddingHorizontal: '10%',
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    backgroundColor:'black'
+    backgroundColor: 'black'
   },
   selectedOption: {
     backgroundColor: '#00796b',
@@ -132,7 +178,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: '#ddd',
-    backgroundColor:'white',
+    backgroundColor: 'white',
     borderRadius: 8,
     margin: 5,
   },

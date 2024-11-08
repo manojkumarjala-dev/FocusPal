@@ -100,22 +100,41 @@ const PomodoroTimerScreen = () => {
 
       {/* Completion modal */}
       <Modal visible={isTimerCompleted} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Take a Break!</Text>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => {
-                setIsTimerCompleted(false);
-                setSecondsLeft(isWorkTime ? customWorkTime * 60 : customBreakTime * 60);
-                toggleTimer()
-              }}
-            >
-              <Text style={{ color: 'white' }}>Start Break</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalTitle}>Work time up! Do you want to take a break or continue another session?</Text>
+      
+      <View style={styles.modalButtonContainer}>
+        <TouchableOpacity
+          style={styles.modalButton}
+          onPress={() => {
+            // Continue with another work session
+            setIsTimerCompleted(false);
+            setIsWorkTime(true); // Set to work time
+            setSecondsLeft(customWorkTime * 60); // Reset to custom work time
+            setIsRunning(true); // Start the timer
+          }}
+        >
+          <Text style={{ color: 'white' }}>No! Another session</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.modalButton}
+          onPress={() => {
+            // Start a break session
+            setIsTimerCompleted(false);
+            setIsWorkTime(false); // Set to break time
+            setSecondsLeft(customBreakTime * 60); // Reset to custom break time
+            setIsRunning(true); // Start the timer
+          }}
+        >
+          <Text style={{ color: 'white' }}>Start Break</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
 
       {/* Custom timer modal */}
       <Modal visible={isCustomizing} transparent={true} animationType="slide">
@@ -153,6 +172,12 @@ const PomodoroTimerScreen = () => {
 
 
 const styles = StyleSheet.create({
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 20,
+  },  
   container: {
     flex: 1,
     justifyContent: 'center',
