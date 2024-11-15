@@ -13,6 +13,7 @@ export interface Task {
   priority: Priority;
   text: string;
   userId: string;
+  totalWorkedTime: number;
 }
 
 

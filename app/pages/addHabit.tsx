@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/firebaseConfig'; // Adjust the import path as needed
 import { router } from 'expo-router';
-
-const AddHabitScreen = () => {
+import { AuthContext } from '@/AuthProvider';
+const AddHabitScreen = () => { // Make sure user is passed as a prop or accessed via context
   const [habitName, setHabitName] = useState('');
+  const { user } = useContext(AuthContext);
   const [frequency, setFrequency] = useState('Daily'); // Default to 'Daily'
   const [customDays, setCustomDays] = useState<Record<Day, boolean>>({
     Mon: false,
@@ -24,6 +25,11 @@ const AddHabitScreen = () => {
   };
 
   const handleAddHabit = async () => {
+    if (!user) {
+      Alert.alert("Error", "User not logged in.");
+      return;
+    }
+
     const selectedDays = (Object.keys(customDays) as Day[]).filter(day => customDays[day]);
 
     if (!habitName.trim()) {
@@ -46,7 +52,8 @@ const AddHabitScreen = () => {
       streaks: {
         currentStreak: 0,
         highestStreak: 0,
-      }
+      },
+      userId: user.uid, // Save the userId
     };
 
     try {
@@ -123,6 +130,7 @@ const AddHabitScreen = () => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Dimensions, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Dimensions, ScrollView, Button, Alert } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Animatable from 'react-native-animatable';
 import { BarChart } from 'react-native-chart-kit';
 import { format, parseISO, startOfMonth } from 'date-fns';
@@ -24,6 +24,7 @@ export default function HabitDisplayScreen() {
   const [highestStreak, setHighestStreak] = useState(0);
   const [loading, setLoading] = useState(true);
   const [monthlySuccessData, setMonthlySuccessData] = useState({});
+  const router = useRouter();
 
   useEffect(() => {
     const fetchHabitData = async () => {
@@ -89,6 +90,35 @@ export default function HabitDisplayScreen() {
     };
   };
 
+  // Delete the habit
+  const handleDeleteHabit = async () => {
+    Alert.alert(
+      "Delete Habit",
+      "Are you sure you want to delete this habit? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const habitRef = doc(db, 'habits', id);
+              await deleteDoc(habitRef);
+              console.log("Habit deleted!");
+              router.navigate('/landing');  
+            } catch (error) {
+              console.error("Error deleting habit:", error);
+              Alert.alert("Error", "There was an issue deleting the habit.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -101,7 +131,7 @@ export default function HabitDisplayScreen() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Habit: {habitName}</Text>
       <Text style={styles.subtitle}>Frequency: {frequency}</Text>
-      
+
       <View style={styles.streakContainer}>
         <Text style={styles.streakLabel}>Current Streak:</Text>
         <Text style={styles.streakValue}>{currentStreak} {currentStreak === 1 ? 'day' : 'days'}</Text>
@@ -145,6 +175,14 @@ export default function HabitDisplayScreen() {
         }}
         style={styles.chartStyle}
       />
+
+      <View style={styles.deleteButtonContainer}>
+        <Button
+          title="Delete Habit"
+          color="#d32f2f"
+          onPress={handleDeleteHabit}
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -152,9 +190,9 @@ export default function HabitDisplayScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal:20,
-    paddingBottom:'20%',
-    marginBottom:'5%',
+    paddingHorizontal: 20,
+    paddingBottom: '20%',
+    marginBottom: '5%',
     backgroundColor: "#f5f5f5",
   },
   title: {
@@ -210,5 +248,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginVertical: 8,
   },
+  deleteButtonContainer: {
+    marginTop: 30,
+  },
 });
-

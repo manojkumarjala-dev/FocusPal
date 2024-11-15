@@ -59,6 +59,7 @@ export default function ViewTasksScreen() {
               priority: data.priority,
               text: data.text,
               userId: data.userId,
+              totalWorkedTime: data.totalWorkedTime
             });
           } else {
             console.warn(`Missing fields in document with ID: ${doc.id}`, data);
@@ -77,7 +78,6 @@ export default function ViewTasksScreen() {
   useEffect(() => {
     if (tasks.length > 0) {
       filterTasksByDate(getLocalDateString());
-      console.log(filteredTasks)
     }
   }, [tasks]);
 

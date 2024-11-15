@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { View, Text, Modal, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { db } from '@/firebaseConfig';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { collection, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import { format, startOfWeek, subWeeks, addDays, addWeeks } from 'date-fns';
+import { AuthContext } from '@/AuthProvider';
 
 const HomeScreen = () => {
   const router = useRouter();
@@ -14,6 +15,7 @@ const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [weekStartDate, setWeekStartDate] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
+  const { user } = useContext(AuthContext);
 
   const fetchHabits = async () => {
 
@@ -193,6 +195,12 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const filtered = habits.filter(habit => {
+      // Ensure the habit belongs to the current user
+      if (habit.userId !== user.uid) {
+        return false;
+      }
+    
+      // Filter based on frequency
       if (habit.frequency === 'Daily') {
         return true;
       } else if (habit.frequency === 'Weekly') {
@@ -202,7 +210,9 @@ const HomeScreen = () => {
       }
       return false;
     });
+    
     setFilteredHabits(filtered);
+    
   }, [selectedDate, habits]);
 
   const renderHabit = ({ item }) => {

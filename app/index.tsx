@@ -15,6 +15,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
+
 export default function HomeScreen() {
   const { user } = useContext(AuthContext);
   const [tasks, setTasks] = useState([]);
@@ -54,37 +55,100 @@ export default function HomeScreen() {
   const fetchTasksAndHabits = async () => {
     try {
       const today = format(new Date(), 'yyyy-MM-dd');
-
-      // Fetch tasks due today
-      const tasksCollection = collection(db, 'tasks');
-      const taskSnapshot = await getDocs(tasksCollection);
-      const taskList = taskSnapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((task) => task.dueDate === today); // Filter tasks due today
-      
-      setTasks(taskList);
-
-      // Fetch habits due today
-      const habitsCollection = collection(db, 'habits');
-      const habitSnapshot = await getDocs(habitsCollection);
-      const habitList = habitSnapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((habit) => habit.dueDate === today); // Filter habits due today
-      setHabits(habitList);
+      const tasList = [];
+      const habiList = [];
+  
+      // Fetch tasks due today for the specific user
+      if (user) {
+        const taskSnapshot = await db
+          .collection('tasks')
+          .where('userId', '==', user.uid)
+          .get();
+  
+        taskSnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.deadline === today) {
+            tasList.push({
+              id: doc.id,
+              category: data.category,
+              completed: data.completed,
+              createdAt: data.createdAt,
+              deadline: data.deadline,
+              priority: data.priority,
+              text: data.text,
+              userId: data.userId,
+            });
+          }
+        });
+        setTasks(tasList);
+        console.log("TASKS:", tasList);
+      }
+  
+      // Fetch habits for the specific user
+      if (user) {
+        const habitSnapshot = await db
+          .collection('habits')
+          .where('userId', '==', user.uid)
+          .get();
+  
+        habitSnapshot.forEach((doc) => {
+          const data = doc.data();
+          console.log(data)
+          habiList.push({
+            id: doc.id,
+            habitName: data.name,
+            frequency: data.frequency,
+            startDate: data.startDate,
+            customDays: data.customDays, // Only for custom frequency
+          });
+        });
+        
+        // Filter habits that are due today based on frequency
+        const filteredHabits = habiList.filter(habit => {
+          if (habit.frequency === 'Daily') {
+            return true; // Daily habits are always due
+          } else if (habit.frequency === 'Weekly') {
+            return isWeeklyHabitDue(habit.startDate, today);
+          } else if (habit.frequency === 'Custom') {
+            return isCustomDay(habit.customDays, today);
+          }
+          return false;
+        });
+  
+        setHabits(filteredHabits);
+        console.log("HABITS:", filteredHabits);
+      }
     } catch (error) {
       console.error("Error fetching tasks or habits:", error);
     }
   };
+  
+  // Helper function to check if a weekly habit is due today
+  const isWeeklyHabitDue = (startDate, selectedDate) => {
+    const start = new Date(startDate);
+    const selected = new Date(selectedDate);
+    const diffInDays = (selected - start) / (1000 * 60 * 60 * 24);
+    return diffInDays % 7 === 0; // Due every 7 days
+  };
+  
+  // Helper function to check if a custom habit is due on a specific day
+  const isCustomDay = (customDays, selectedDate) => {
+    const selectedDay = new Date(selectedDate).getDay(); // 0 for Sunday, 1 for Monday, etc.
+    return customDays.includes(selectedDay);
+  };
+  
+
 
   // Schedule a daily notification at a specific time (e.g., 8 am)
   const scheduleDailyNotification = async () => {
     try {
       // Prepare the notification content
-      const taskList = tasks.map(task => `• ${task.name}`).join('\n');
-      const habitList = habits.map(habit => `• ${habit.name}`).join('\n');
-      let message = "Tasks and Habits Due Today:\n\n";
-      if (taskList) message += `Tasks:\n${taskList}\n\n`;
-      if (habitList) message += `Habits:\n${habitList}\n\n`;
+      const taskList = tasks.map(task => `• ${task.text}`).join('\n');
+      const habitList = habits.map(habit => `• ${habit.habitName}`).join('\n');
+      let message = "Tasks and Habits Due Today:\n";
+
+      if (taskList) message += `Tasks:\n${taskList}\n`;
+      if (habitList) message += `Habits:\n${habitList}\n`;
       if (!taskList && !habitList) message += "No tasks or habits due today!";
 
       // Cancel any previously scheduled notifications to avoid duplicates
@@ -98,8 +162,8 @@ export default function HomeScreen() {
           sound: true,
         },
         trigger: {
-          hour: 23, 
-          minute: 35,
+          hour: 22, 
+          minute: 54,
           repeats: true,
         },
       });
