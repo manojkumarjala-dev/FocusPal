@@ -122,7 +122,12 @@ const PomodoroTimerScreen = () => {
   
 
   return (
-    <View style={styles.container}>
+    <View style={[
+      styles.container,
+      {
+        backgroundColor: isWorkTime ? '#FFE4E1' : '#E0F7FA', // Light pink for work, light blue for break
+      },
+    ]}>
       <Text style={styles.title}>{isWorkTime ? 'Work Time' : 'Break Time'}</Text>
       <Text style={styles.timer}>{formatTime(secondsLeft)}</Text>
       <TouchableOpacity onPress={() => setIsCustomizing(true)} style={{ paddingBottom: 15 }}>
@@ -216,72 +221,105 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#f8f9fa', // Light background for the entire screen
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '600',
     marginBottom: 20,
+    color: '#333',
   },
   timer: {
-    fontSize: 48,
+    fontSize: 80,
     fontWeight: 'bold',
+    color: '#333', // Dark gray for timer
   },
   buttonContainer: {
     flexDirection: 'row',
-    marginTop: 20,
+    marginTop: 30,
+    justifyContent: 'space-between',
+    width: '80%', // Space buttons evenly
   },
   primaryButton: {
+    flex: 1,
     padding: 15,
-    backgroundColor: '#4CAF50',
-    marginRight: 10,
-    borderRadius: 5,
+    backgroundColor: '#28a745', // Green for primary action
+    marginHorizontal: 10,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   secondaryButton: {
+    flex: 1,
     padding: 15,
-    backgroundColor: '#f44336',
-    borderRadius: 5,
+    backgroundColor: '#dc3545', // Red for secondary action
+    marginHorizontal: 10,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '500',
   },
   customButtonText: {
     fontSize: 16,
     color: '#007BFF',
+    textDecorationLine: 'underline', // Emphasize with underline
+    marginBottom: 10,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
   },
   modalContent: {
-    width: '80%',
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
+    width: '90%',
+    backgroundColor: '#fff',
+    padding: 30,
+    borderRadius: 20,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 20,
+    color: '#333',
+    textAlign: 'center',
   },
   modalButtonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
+    marginTop: 20,
     width: '100%',
   },
   modalButton: {
-    padding: 10,
-    backgroundColor: '#4CAF50',
-    borderRadius: 5,
-    marginTop: 20,
+    flex: 1,
+    padding: 12,
+    backgroundColor: '#007BFF', // Blue buttons for modals
+    borderRadius: 10,
+    marginHorizontal: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   input: {
-    height: 40,
-    borderColor: '#ccc',
+    height: 50,
+    borderColor: '#ddd',
     borderWidth: 1,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    fontSize: 16,
     width: '100%',
+    marginBottom: 15,
   },
 });
+
 
 export default PomodoroTimerScreen;

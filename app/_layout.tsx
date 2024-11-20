@@ -69,7 +69,15 @@ export default function RootLayout() {
             headerBackTitle:'Tasks'
           }} 
         />
-      </Stack>
+      
+      <Stack.Screen 
+          name="pages/habitPage/[id]" 
+          options={{
+            title:'',
+            headerBackTitle:'Habits'
+          }} 
+        />
+        </Stack>
     </ThemeProvider>
     </AuthProvider>
     

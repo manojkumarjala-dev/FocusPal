@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, ScrollView, ImageBackground } from 'react-native';
 import { db } from '@/firebaseConfig';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { collection, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
@@ -45,6 +45,15 @@ const HomeScreen = () => {
       const habitSnapshot = await getDoc(habitRef);
       const habitData = habitSnapshot.data();
   
+      // Validate if the date is on or after the startDate
+      const habitStartDate = new Date(habitData.startDate);
+      const selectedDate = new Date(date);
+  
+      if (selectedDate < habitStartDate) {
+        alert("You cannot mark a habit before its start date.");
+        return;
+      }
+  
       const updates = {
         [`dates.${status}`]: arrayUnion(date),
       };
@@ -74,9 +83,9 @@ const HomeScreen = () => {
       let tempStreak = 0;
       let previousDate = null;
   
-      successDates.forEach(date => {
+      successDates.forEach((date) => {
         const currentDate = new Date(date);
-        if (previousDate && (currentDate.getTime() - previousDate.getTime() === 86400000)) {
+        if (previousDate && currentDate.getTime() - previousDate.getTime() === 86400000) {
           tempStreak++;
         } else {
           tempStreak = 1;
@@ -99,10 +108,14 @@ const HomeScreen = () => {
           if (habit.id === selectedHabit.id) {
             const updatedDates = { ...habit.dates };
             if (status === 'success') {
-              updatedDates.success = updatedDates.success ? [...updatedDates.success, date].filter((d) => d !== date || status === 'success') : [date];
+              updatedDates.success = updatedDates.success
+                ? [...updatedDates.success, date].filter((d) => d !== date || status === 'success')
+                : [date];
               updatedDates.failure = updatedDates.failure ? updatedDates.failure.filter((d) => d !== date) : [];
             } else if (status === 'failure') {
-              updatedDates.failure = updatedDates.failure ? [...updatedDates.failure, date].filter((d) => d !== date || status === 'failure') : [date];
+              updatedDates.failure = updatedDates.failure
+                ? [...updatedDates.failure, date].filter((d) => d !== date || status === 'failure')
+                : [date];
               updatedDates.success = updatedDates.success ? updatedDates.success.filter((d) => d !== date) : [];
             }
             return {
@@ -118,11 +131,12 @@ const HomeScreen = () => {
         })
       );
     } catch (error) {
-      console.error("Error updating habit:", error);
+      console.error('Error updating habit:', error);
     } finally {
       setModalVisible(false);
     }
   };
+  
   
   
   
@@ -250,8 +264,11 @@ const HomeScreen = () => {
   }
 
   return (
+    <ImageBackground
+    source={require('@/assets/images/habitt.webp')} // Ensure the correct path to your assets folder
+    style={styles.backgroundImage}
+  >
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>My Habits</Text>
 
       <TouchableOpacity
         style={styles.addHabitButton}
@@ -276,7 +293,7 @@ const HomeScreen = () => {
             key={fullDate}
             style={[
               styles.dateButton,
-              selectedDate === fullDate && styles.selectedDateButton
+              selectedDate === fullDate && styles.selectedDateButton,
             ]}
             onPress={() => setSelectedDate(fullDate)}
           >
@@ -286,7 +303,7 @@ const HomeScreen = () => {
       </View>
 
       <View style={[styles.habitList, { marginTop: '10%', marginBottom: '10%' }]}>
-        {filteredHabits.map((item) => renderHabit({ item, key: item.id  }))}
+        {filteredHabits.map((item) => renderHabit({ item, key: item.id }))}
       </View>
 
       <Modal
@@ -304,7 +321,9 @@ const HomeScreen = () => {
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
 
-            <Text style={styles.modalText}>Mark Habit Status for {selectedHabit?.name}</Text>
+            <Text style={styles.modalText}>
+              Mark Habit Status for {selectedHabit?.name}
+            </Text>
             {!isFutureDate(selectedDate) ? (
               <View style={styles.modalButtons}>
                 <TouchableOpacity
@@ -321,12 +340,15 @@ const HomeScreen = () => {
                 </TouchableOpacity>
               </View>
             ) : (
-              <Text style={styles.futureDateText}>Cannot mark status for future dates.</Text>
+              <Text style={styles.futureDateText}>
+                Cannot mark status for future dates.
+              </Text>
             )}
           </View>
         </View>
       </Modal>
     </ScrollView>
+  </ImageBackground>
   );
 };
 
@@ -334,6 +356,10 @@ const HomeScreen = () => {
 
 const styles = StyleSheet.create({
   // Styles for the week navigation container
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover', // Cover the entire screen
+  },
 weekNavigationContainer: {
   flexDirection: 'row',
   alignItems: 'center',
@@ -395,7 +421,6 @@ monthText: {
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
     marginBottom:'25%'
   },
   title: {

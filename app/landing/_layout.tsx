@@ -10,6 +10,7 @@ import { ThemeProvider } from '@react-navigation/native';
 import Drawer from 'expo-router/drawer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { onAuthStateChanged, User } from 'firebase/auth'; // Ensure this import is included
+import { SafeAreaView, StyleSheet } from 'react-native';
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
@@ -43,6 +44,8 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        
+      
       <GestureHandlerRootView>
         <Drawer>
           <Drawer.Screen
@@ -67,3 +70,16 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
+
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'white', // Match your app's background color
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+});
+

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
 import { db } from '@/firebaseConfig'; // Ensure this points to your Firebase config
 import { AuthContext } from '@/AuthProvider'; // Ensure AuthContext is correctly imported
 import { useRouter } from 'expo-router'; // Use router for navigation
@@ -49,6 +49,10 @@ export default function PomodoroWelcomeScreen() {
   }
 
   return (
+    <ImageBackground
+    source={require('@/assets/images/habitt.webp')} // Ensure the correct path to your assets folder
+    style={styles.backgroundImage}
+  >
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome to Focus Timer</Text>
       <Text style={styles.sessionCount}>You have completed {focusSessions} focus sessions.</Text>
@@ -57,25 +61,29 @@ export default function PomodoroWelcomeScreen() {
         <Text style={styles.startButtonText}>Start your timer</Text>
       </TouchableOpacity>
     </View>
+    </ImageBackground>
   );
 }
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover', // Cover the entire screen
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#121212', // Dark background color
   },
   welcomeText: {
     fontSize: 28, // Larger text for prominence
     fontWeight: 'bold',
-    color: '#ffffff', // White text color
+    color: '#000000', // White text color
     marginBottom: 20,
   },
   sessionCount: {
     fontSize: 18,
-    color: '#a5a5a5', // Subtle grey for secondary information
+    color: '#8C8C8C', // Subtle grey for secondary information
     marginBottom: 40,
   },
   startButton: {
