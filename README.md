@@ -38,7 +38,7 @@
 
 | Habit Tracker | Task Management | Focus Timer |
 |--------------|----------------|------------|
-| ![Habit Tracker](./screenshots/habit_tracker.png) | ![Task Management](./screenshots/task_management.png) | ![Focus Timer](./screenshots/focus_timer.png) |
+| ![Habit Tracker](./habit_tracker.png) | ![Task Management](./task_management.png) | ![Focus Timer](./focus_timer.png) |
 
 ---
 
@@ -87,13 +87,13 @@
 ## 📸 Screenshots  
 
 ### 📍 Habit Tracker  
-![Habit Tracker](screenshots/habit_tracker.png)  
+![Habit Tracker](habit_tracker.png)  
 
 ### 📍 Task Management  
-![Task Management](screenshots/task_management.png)  
+![Task Management](task_management.png)  
 
 ### 📍 Focus Timer  
-![Focus Timer](screenshots/focus_timer.png)  
+![Focus Timer](focus_timer.png)  
 
 ---
 
