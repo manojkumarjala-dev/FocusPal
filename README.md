@@ -1,50 +1,105 @@
-# Welcome to your Expo app 👋
+# 📌 FocusPal - Productivity & Habit Tracking App  
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**FocusPal** is a cross-platform mobile application built using **React Native and Expo**, designed to help users track habits, manage tasks, and stay focused using a Pomodoro-style timer.
 
-## Get started
+## 🚀 Features  
 
-1. Install dependencies
+### 1️⃣ Habit Tracking  
+- **Customizable Habits:** Track habits on a **weekly, bi-weekly, or random schedule**.  
+- **Daily Habit Marking:** Mark habits as **successful** or **failed** each day.  
+- **Visual Calendar:** Navigate and track progress using an **interactive date selector**.  
+- **Habit Streaks:** Encourages consistency by displaying **current and longest streaks**.  
+- **Minimalistic UI:** Clean and user-friendly interface to **log habits seamlessly**.  
 
-   ```bash
+### 2️⃣ Task Management  
+- **Task Creation:** Add tasks with a **title, priority (low, medium, high), and category (work, health, personal, custom)**.  
+- **Deadline Management:** Assign deadlines and **sort tasks by priority or category**.  
+- **Interactive Task Calendar:** Shows task distribution across **dates with visual indicators**.  
+- **Delete Tasks:** Easily remove completed or unnecessary tasks.  
+- **Categorization:** Organize tasks based on their **importance and type**.  
+
+### 3️⃣ Focus Timer (Pomodoro)  
+- **Time Management:** A **Pomodoro-style focus timer** to enhance productivity.  
+- **Task-Linked Focus Sessions:** Connect tasks with focus sessions to track **how many sessions are spent on a particular task**.  
+- **Session Progress:** Displays the **number of completed focus sessions** for each task.  
+- **Dark Mode:** Provides a distraction-free experience.  
+
+---
+
+## 🛠️ Tech Stack  
+- **Frontend:** React Native (Expo)  
+- **State Management:** Context API  
+- **Backend:** Firebase (Authentication & Database)  
+- **UI Components:** React Native Paper / Styled Components  
+
+---
+
+## 📸 Screenshots  
+
+| Habit Tracker | Task Management | Focus Timer |
+|--------------|----------------|------------|
+| ![Habit Tracker](./screenshots/habit_tracker.png) | ![Task Management](./screenshots/task_management.png) | ![Focus Timer](./screenshots/focus_timer.png) |
+
+---
+
+## 📦 Installation & Setup  
+
+1. **Clone the Repository**  
+   ```sh
+   git clone https://github.com/manojkumarjala-dev/FocusPal.git
+   cd FocusPal
+2. **Install Dependencies**
+    ```sh
    npm install
+3. **Run the App**
+   ```sh
+   npx expo start
+### 4️⃣ Run on Device  
+- Scan the QR code using the **Expo Go app** on your **iOS or Android** device.  
+
+---
+
+## 🛡️ Security & Data Storage  
+- User data is securely stored in **Firebase Firestore**.  
+- Authentication via **Firebase Auth**.  
+- **Local storage** for offline access.  
+
+---
+## 🤝 Contributing  
+
+1. **Fork the repository**  
+2. **Create a new branch:**  
+   ```sh
+   git checkout -b feature-name
+### ✅ Commit Changes  
+   ```sh
+   git commit -m "Add new feature"
    ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
+### 🚀 Push Branch
+   ```sh
+   git push origin feature-name
    ```
+## 📌 Future Enhancements  
+- ✅ **Daily & Weekly Habit Reports**  
+- 🔔 **Task Notifications & Reminders**  
+- 🎛 **More Customization for Timer & Habits**  
 
-In the output, you'll find options to open the app in a
+## 📸 Screenshots  
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 📍 Habit Tracker  
+![Habit Tracker](screenshots/habit_tracker.png)  
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 📍 Task Management  
+![Task Management](screenshots/task_management.png)  
 
-## Get a fresh project
+### 📍 Focus Timer  
+![Focus Timer](screenshots/focus_timer.png)  
 
-When you're ready, run:
+---
 
-```bash
-npm run reset-project
-```
+## 📧 Contact  
+Developed by **Manoj Kumar Jala**  
+✉️ Email: jalav@iu.edu
+🔗 LinkedIn: [My LinkedIn](https://www.linkedin.com/in/manojkumarjala/) 
+🚀 GitHub: [My GitHub](https://github.com/manojkumarjala-dev)  
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
